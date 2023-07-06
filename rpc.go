@@ -4,18 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"flag"
-	"io"
 	"log"
 	"net/http"
 )
 
-var AppConfig = &Config{}
-
-type ActionFunction func(rpc *Rpc, body io.ReadCloser, appAuth string) (Response, error)
+var Config = &config{}
 
 type Rpc struct {
-	Action ActionFunction
-
 	worker *Worker
 }
 
@@ -24,20 +19,20 @@ func init() {
 }
 
 func (rpc *Rpc) Run() {
-	if AppConfig.IsService() {
-		if AppConfig.appUrl == "" {
+	if Config.IsService() {
+		if Config.appUrl == "" {
 			flag.PrintDefaults()
 			log.Fatal("application hook URL is required")
 		}
 
 		runService()
-	} else if AppConfig.serve {
-		if AppConfig.appUrl == "" {
+	} else if Config.serve {
+		if Config.appUrl == "" {
 			flag.PrintDefaults()
 			log.Fatal("application hook URL is required")
 		}
 
-		rpc.serve(AppConfig.addr)
+		rpc.serve(Config.addr)
 	}
 }
 
@@ -47,7 +42,12 @@ func (rpc *Rpc) serve(addr string) {
 		rpc.worker.DoWork()
 	}()
 
-	http.HandleFunc("/get", rpc.getRequest)
+	actions := Config.GetActions()
+
+	for uri, _ := range actions {
+		http.HandleFunc(uri, rpc.getRequest)
+	}
+
 	log.Printf("Listening on %s", addr)
 	err := http.ListenAndServe(addr, nil)
 
@@ -60,7 +60,7 @@ func (rpc *Rpc) getRequest(w http.ResponseWriter, req *http.Request) {
 	secret := req.Header.Get("X-SECRET")
 	appAuth := req.Header.Get("X-APP-AUTH")
 
-	if secret != AppConfig.appSecret {
+	if secret != Config.appSecret {
 		http.Error(w, "Wrong secret", http.StatusUnauthorized)
 		return
 	}
@@ -70,9 +70,14 @@ func (rpc *Rpc) getRequest(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	requestAcceptedResponse, err := rpc.Action(rpc, req.Body, appAuth)
+	action := Config.GetAction(req.RequestURI)
+	if action == nil {
+		http.Error(w, "Not found", http.StatusNotFound)
+	}
+
+	requestAcceptedResponse, err := (*action)(rpc, req.Body, appAuth)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, "Bad result", http.StatusBadRequest)
 		return
 	}
 
@@ -90,7 +95,7 @@ func (rpc *Rpc) AddJob(job Job) {
 func (rpc *Rpc) SendResult(response ResultResponse, appAuth string) {
 	data, _ := json.Marshal(response)
 
-	appRequest, _ := http.NewRequest("POST", AppConfig.appUrl, bytes.NewBuffer(data))
+	appRequest, _ := http.NewRequest("POST", Config.appUrl, bytes.NewBuffer(data))
 	appRequest.Header.Set("Content-Type", "application/json")
 	appRequest.Header.Set("X-APP-AUTH", appAuth)
 
@@ -100,6 +105,6 @@ func (rpc *Rpc) SendResult(response ResultResponse, appAuth string) {
 	if err != nil {
 		log.Printf("Failed to send results: %v", err)
 	} else {
-		log.Printf("Results sent to %s", AppConfig.appUrl)
+		log.Printf("Results sent to %s", Config.appUrl)
 	}
 }

@@ -11,21 +11,22 @@ type ServiceConfig struct {
 	Description string
 }
 
-type Config struct {
+type config struct {
 	addr           string
 	appUrl         string
 	appSecret      string
 	serve          bool
 	isInstalling   bool
 	isUninstalling bool
+	actions        map[string]*ActionFunction
 	Service        ServiceConfig
 }
 
-func (cfg *Config) Serving() bool {
+func (cfg *config) Serving() bool {
 	return cfg.serve || cfg.IsService()
 }
 
-func (cfg *Config) IsService() bool {
+func (cfg *config) IsService() bool {
 	found := true
 
 	flag.Visit(func(f *flag.Flag) {
@@ -37,12 +38,28 @@ func (cfg *Config) IsService() bool {
 	return found
 }
 
-func (cfg *Config) GetAppUrl() string {
+func (cfg *config) GetAppUrl() string {
 	return cfg.appUrl
 }
 
-func (cfg *Config) SetServiceSettings(name string, displayName string, description string) {
+func (cfg *config) SetServiceSettings(name string, displayName string, description string) {
 	cfg.Service.Name = name
 	cfg.Service.DisplayName = displayName
 	cfg.Service.Description = description
+}
+
+func (cfg *config) SetAction(uri string, action *ActionFunction) {
+	if cfg.actions == nil {
+		cfg.actions = map[string]*ActionFunction{}
+	}
+
+	cfg.actions[uri] = action
+}
+
+func (cfg *config) GetAction(uri string) *ActionFunction {
+	return cfg.actions[uri]
+}
+
+func (cfg *config) GetActions() map[string]*ActionFunction {
+	return cfg.actions
 }

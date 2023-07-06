@@ -15,7 +15,7 @@ func (p Daemon) Start(s service.Service) error {
 	rpc := &Rpc{}
 
 	go func() {
-		rpc.serve(AppConfig.addr)
+		rpc.serve(Config.addr)
 	}()
 
 	return nil
@@ -26,7 +26,7 @@ func (p Daemon) Stop(s service.Service) error {
 }
 
 func runService() {
-	if AppConfig.isInstalling {
+	if Config.isInstalling {
 		reader := bufio.NewReader(os.Stdin)
 
 		fmt.Print("Application hook URL (required): ")
@@ -53,7 +53,7 @@ func runService() {
 		os.Exit(0)
 	}
 
-	if AppConfig.isUninstalling {
+	if Config.isUninstalling {
 		srv := getService([]string{})
 		err := srv.Uninstall()
 
@@ -78,9 +78,9 @@ func runService() {
 func getService(args []string) service.Service {
 
 	serviceConfig := &service.Config{
-		Name:        AppConfig.Service.Name,
-		DisplayName: AppConfig.Service.DisplayName,
-		Description: AppConfig.Service.Description,
+		Name:        Config.Service.Name,
+		DisplayName: Config.Service.DisplayName,
+		Description: Config.Service.Description,
 		Arguments:   args,
 	}
 
