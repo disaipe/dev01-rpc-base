@@ -27,7 +27,7 @@ func (cfg *config) Serving() bool {
 }
 
 func (cfg *config) IsService() bool {
-	found := true
+	found := false
 
 	flag.Visit(func(f *flag.Flag) {
 		if f.Name == "srv" || strings.HasPrefix(f.Name, "srv.") {
