@@ -9,7 +9,7 @@ import (
 	"net/http"
 )
 
-var AppConfig *Config
+var AppConfig = &Config{}
 
 type ActionFunction func(rpc *Rpc, body io.ReadCloser, appAuth string) (Response, error)
 
@@ -23,12 +23,8 @@ func init() {
 	parseFlags()
 }
 
-func Configure() {
-
-}
-
 func (rpc *Rpc) Run() {
-	if AppConfig.isService {
+	if AppConfig.IsService() {
 		if AppConfig.appUrl == "" {
 			flag.PrintDefaults()
 			log.Fatal("application hook URL is required")

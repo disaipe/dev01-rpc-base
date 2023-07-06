@@ -76,10 +76,11 @@ func runService() {
 }
 
 func getService(args []string) service.Service {
+
 	serviceConfig := &service.Config{
-		Name:        "dev01-fs-daemon",
-		DisplayName: "Dev01 file storages monitor daemon",
-		Description: "The part of the Dev01 platform",
+		Name:        AppConfig.Service.Name,
+		DisplayName: AppConfig.Service.DisplayName,
+		Description: AppConfig.Service.Description,
 		Arguments:   args,
 	}
 
