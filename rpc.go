@@ -61,22 +61,29 @@ func (rpc *Rpc) getRequest(w http.ResponseWriter, req *http.Request) {
 	appAuth := req.Header.Get("X-APP-AUTH")
 
 	if secret != Config.appSecret {
+		log.Printf("Request declined - wrong secret")
 		http.Error(w, "Wrong secret", http.StatusUnauthorized)
 		return
 	}
 
 	if req.ContentLength == 0 {
+		log.Printf("Request declined - bad data")
 		http.Error(w, "Bad data", http.StatusBadRequest)
 		return
 	}
 
 	action := Config.GetAction(req.RequestURI)
 	if action == nil {
+		log.Printf("Request declined - action not found")
 		http.Error(w, "Not found", http.StatusNotFound)
+		return
 	}
+
+	log.Printf("Request %s accepted (%v)", req.RequestURI, req.Body)
 
 	requestAcceptedResponse, err := (*action)(rpc, req.Body, appAuth)
 	if err != nil {
+		log.Printf("Request declined - bad action result: %v", err)
 		http.Error(w, "Bad result", http.StatusBadRequest)
 		return
 	}
