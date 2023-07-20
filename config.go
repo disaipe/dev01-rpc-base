@@ -1,8 +1,8 @@
 package rpc
 
 import (
-	"flag"
-	"strings"
+	"os"
+	"path/filepath"
 )
 
 type ServiceConfig struct {
@@ -16,6 +16,7 @@ type config struct {
 	appUrl         string
 	appSecret      string
 	serve          bool
+	isService      bool
 	isInstalling   bool
 	isUninstalling bool
 	actions        map[string]*ActionFunction
@@ -27,19 +28,20 @@ func (cfg *config) Serving() bool {
 }
 
 func (cfg *config) IsService() bool {
-	found := false
+	if cfg.isService || cfg.isInstalling || cfg.isUninstalling {
+		return true
+	}
 
-	flag.Visit(func(f *flag.Flag) {
-		if f.Name == "srv" || strings.HasPrefix(f.Name, "srv.") {
-			found = true
-		}
-	})
-
-	return found
+	return false
 }
 
 func (cfg *config) GetAppUrl() string {
 	return cfg.appUrl
+}
+
+func (cfg *config) GetWorkingDir() string {
+	executable, _ := os.Executable()
+	return filepath.Dir(executable)
 }
 
 func (cfg *config) SetServiceSettings(name string, displayName string, description string) {
