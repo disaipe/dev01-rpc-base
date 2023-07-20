@@ -2,7 +2,6 @@ package rpc
 
 import (
 	"context"
-	"log"
 	"sync"
 )
 
@@ -55,12 +54,12 @@ func (q *Queue) AddJobs(jobs []Job) {
 // AddJob sends job to the channel.
 func (q *Queue) AddJob(job Job) {
 	q.jobs <- job
-	log.Printf("+ job %s added to %s queue", job.Name, q.name)
+	Logger.Info().Msgf("+ job %s added to %s queue", job.Name, q.name)
 }
 
 // Run performs job execution.
 func (j Job) Run() error {
-	log.Printf("~ job running: %s", j.Name)
+	Logger.Info().Msgf("~ job running: %s", j.Name)
 
 	err := j.Action()
 	if err != nil {

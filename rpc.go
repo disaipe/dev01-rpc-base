@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"flag"
-	"log"
 	"net/http"
 )
 
@@ -22,14 +21,14 @@ func (rpc *Rpc) Run() {
 	if Config.IsService() {
 		if Config.appUrl == "" {
 			flag.PrintDefaults()
-			log.Fatal("application hook URL is required")
+			Logger.Fatal().Msgf("application hook URL is required")
 		}
 
 		runService()
 	} else if Config.serve {
 		if Config.appUrl == "" {
 			flag.PrintDefaults()
-			log.Fatal("application hook URL is required")
+			Logger.Fatal().Msgf("application hook URL is required")
 		}
 
 		rpc.serve(Config.addr)
@@ -48,11 +47,11 @@ func (rpc *Rpc) serve(addr string) {
 		http.HandleFunc(uri, rpc.getRequest)
 	}
 
-	log.Printf("Listening on %s", addr)
+	Logger.Info().Msgf("Listening on %s", addr)
 	err := http.ListenAndServe(addr, nil)
 
 	if err != nil {
-		log.Fatalf("Cannot start http server: %v", err)
+		Logger.Fatal().Msgf("Cannot start http server: %v", err)
 	}
 }
 
@@ -61,29 +60,29 @@ func (rpc *Rpc) getRequest(w http.ResponseWriter, req *http.Request) {
 	appAuth := req.Header.Get("X-APP-AUTH")
 
 	if secret != Config.appSecret {
-		log.Printf("Request declined - wrong secret")
+		Logger.Warn().Msgf("Request declined - wrong secret")
 		http.Error(w, "Wrong secret", http.StatusUnauthorized)
 		return
 	}
 
 	if req.ContentLength == 0 {
-		log.Printf("Request declined - bad data")
+		Logger.Warn().Msgf("Request declined - bad data")
 		http.Error(w, "Bad data", http.StatusBadRequest)
 		return
 	}
 
 	action := Config.GetAction(req.RequestURI)
 	if action == nil {
-		log.Printf("Request declined - action not found")
+		Logger.Warn().Msgf("Request declined - action not found")
 		http.Error(w, "Not found", http.StatusNotFound)
 		return
 	}
 
-	log.Printf("Request %s accepted (%v)", req.RequestURI, req.Body)
+	Logger.Info().Msgf("Request %s accepted (%v)", req.RequestURI, req.Body)
 
 	requestAcceptedResponse, err := (*action)(rpc, req.Body, appAuth)
 	if err != nil {
-		log.Printf("Request declined - bad action result: %v", err)
+		Logger.Warn().Msgf("Request declined - bad action result: %v", err)
 		http.Error(w, "Bad result", http.StatusBadRequest)
 		return
 	}
@@ -91,7 +90,7 @@ func (rpc *Rpc) getRequest(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	err = json.NewEncoder(w).Encode(requestAcceptedResponse)
 	if err != nil {
-		log.Printf("Failed to send request: %v", err)
+		Logger.Error().Msgf("Failed to send request: %v", err)
 	}
 }
 
@@ -110,8 +109,8 @@ func (rpc *Rpc) SendResult(response ResultResponse, appAuth string) {
 	_, err := client.Do(appRequest)
 
 	if err != nil {
-		log.Printf("Failed to send results: %v", err)
+		Logger.Warn().Msgf("Failed to send results: %v", err)
 	} else {
-		log.Printf("Results sent to %s", Config.appUrl)
+		Logger.Info().Msgf("Results sent to %s", Config.appUrl)
 	}
 }

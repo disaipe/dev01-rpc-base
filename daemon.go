@@ -3,10 +3,10 @@ package rpc
 import (
 	"bufio"
 	"fmt"
-	"github.com/kardianos/service"
-	"log"
 	"os"
 	"strings"
+
+	"github.com/kardianos/service"
 )
 
 type Daemon struct{}
@@ -46,10 +46,10 @@ func runService() {
 		err := srv.Install()
 
 		if err != nil {
-			log.Fatalf("Cannot install service: %v\n", err)
+			Logger.Fatal().Msgf("Cannot install service: %v\n", err)
 		}
 
-		log.Println("Service installed")
+		Logger.Info().Msgf("Service installed")
 		os.Exit(0)
 	}
 
@@ -58,10 +58,10 @@ func runService() {
 		err := srv.Uninstall()
 
 		if err != nil {
-			log.Fatalf("Cannot uninstall service: %v\n", err)
+			Logger.Fatal().Msgf("Cannot uninstall service: %v\n", err)
 		}
 
-		log.Println("Service uninstalled")
+		Logger.Info().Msgf("Service uninstalled")
 		os.Exit(0)
 	}
 
@@ -69,7 +69,7 @@ func runService() {
 	err := srv.Run()
 
 	if err != nil {
-		log.Fatalf("Cannot start the service: %v\n", err)
+		Logger.Fatal().Msgf("Cannot start the service: %v\n", err)
 	}
 
 	os.Exit(0)
@@ -89,7 +89,7 @@ func getService(args []string) service.Service {
 	srv, err := service.New(prg, serviceConfig)
 
 	if err != nil {
-		log.Fatalf("Cannot create the service: %v\n", err)
+		Logger.Fatal().Msgf("Cannot create the service: %v\n", err)
 	}
 
 	return srv
