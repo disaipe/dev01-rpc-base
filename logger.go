@@ -13,14 +13,18 @@ import (
 var Logger zerolog.Logger
 
 func init() {
-	consoleWriter := &zerolog.ConsoleWriter{Out: os.Stderr}
 	fileWriter := &lumberjack.Logger{
 		Filename: path.Join(Config.GetWorkingDir(), "app.log"),
 		MaxSize:  20,
 		MaxAge:   90,
 	}
 
-	writers := []io.Writer{consoleWriter, fileWriter}
+	writers := []io.Writer{fileWriter}
+
+	if !Config.IsService() {
+		consoleWriter := &zerolog.ConsoleWriter{Out: os.Stderr}
+		writers = append(writers, consoleWriter)
+	}
 
 	zerolog.TimeFieldFormat = time.DateTime
 	Logger = zerolog.New(io.MultiWriter(writers...)).With().Timestamp().Logger()

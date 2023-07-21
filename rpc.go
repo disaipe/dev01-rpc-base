@@ -78,7 +78,7 @@ func (rpc *Rpc) getRequest(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	Logger.Info().Msgf("Request %s accepted (%v)", req.RequestURI, req.Body)
+	Logger.Info().Msgf("Request %s accepted", req.RequestURI)
 
 	requestAcceptedResponse, err := (*action)(rpc, req.Body, appAuth)
 	if err != nil {
