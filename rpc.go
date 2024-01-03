@@ -19,7 +19,7 @@ func init() {
 
 func (rpc *Rpc) Run() {
 	if Config.IsService() {
-		if Config.appUrl == "" {
+		if Config.appUrl == "" && Config.isInstalling == false && Config.isUninstalling {
 			flag.PrintDefaults()
 			Logger.Fatal().Msgf("application hook URL is required")
 		}
